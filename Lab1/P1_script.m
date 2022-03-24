@@ -1,8 +1,11 @@
 clear; clc; 
+
+S = 10;                     % patch size
+
 Ims = {};           % library for imaes
 for i = 1:6
     Im = imread(strcat("wall/img", int2str(i), ".ppm"));
-    Ims{i} = imgaussfilt(rgb2gray(Im), 5);
+    Ims{i} = imgaussfilt(rgb2gray(Im), S/2);
 end
 
 A_mat = {};         % library of homographic matrices
@@ -22,27 +25,29 @@ end
 
 N_points = 1000;            % Number of corners selected
 
-S = 10;                     % patch size
 points1 = detectHarrisFeatures(Ims{1});
+
 valid_points1 = and(and(points1.Location(:,1) > S/2+1, points1.Location(:,2) > S/2+1),  ...
-            and(points1.Location(:,1) < size(Ims{1},2)-S/2, points1.Location(:,2) < size(Ims{1},1)-S/2));
+            and(points1.Location(:,1) < size(Ims{1},2)-S/2, points1.Location(:,2) < size(Ims{1},1)-S/2)); 
+% valid points are those that have some distance from 
 
-points1 = points1(valid_points1);
-points1 = points1.selectStrongest(N_points);
+points1 = points1(valid_points1);               % subset of valid points
+points1 = points1.selectStrongest(N_points);    % choose the strongest 
 
-points_matrix = zeros(6,2,N_points);
-points_matrix(1,:,:) = points1.Location';
-valid_points_mat = zeros(6,N_points);           % which_im, which_point
-valid_points_mat(1,:) = ones(1,N_points);
+points_matrix = zeros(6,2,N_points);            % dimensions are (which_im, (x,y), Points)
+points_matrix(1,:,:) = points1.Location';       % save the ones from the first image
+valid_points_mat = zeros(6,N_points);           % valid points for (which_im, which_point)
+valid_points_mat(1,:) = ones(1,N_points);       % we have already made sure that the first image where valid
 
 p_use = ones(3,N_points);
-p_use(1:2,:) = points_matrix(1,:,:);
+p_use(1:2,:) = points_matrix(1,:,:);            % p_use are the points (x,y,1)' in a matrix
 for i = 2:6
-    p_aux = A_mat{i}*p_use;
+    p_aux = A_mat{i}*p_use;                     % hom transf for the image i
     points_matrix(i,1,:) = p_aux(1,:)./p_aux(3,:);
     points_matrix(i,2,:) = p_aux(2,:)./p_aux(3,:);
     valid_points_mat(i,:) = and(and(points_matrix(i,1,:) > S/2+1, points_matrix(i,2,:) > S/2+1),  ...
-            and(points_matrix(i,1,:) < size(Ims{i},2)-S/2, points_matrix(i,2,:) < size(Ims{i},1)-S/2));
+            and(points_matrix(i,1,:) < size(Ims{i},2)-S/2, points_matrix(i,2,:) < size(Ims{i},1)-S/2)); 
+    % check which are valid in the image i
 end
 
 
@@ -63,16 +68,12 @@ end
 
 
 %% start exercise
-n = 256;                        % number of descriptors pairs
-descriptor_points = zeros(4,n); % each column [p1(1), p1(2), p2(1), p2(2)]'
-descriptor_points(1,:) = randi(10, [1,n])-5;
-descriptor_points(2,:) = randi(10, [1,n])-5;
-descriptor_points(3,:) = randi(10, [1,n])-5;
-descriptor_points(4,:) = randi(10, [1,n])-5;
-
+n = 128;                        % number of descriptors pairs
+descriptor_points = randi(S, [4,n])-S/2; % each column [p1(1), p1(2), p2(1), p2(2)]'
+% from [-S/2, +S/2]
 
 %%
-Im1_descriptor_points = zeros(6, N_points, n); % (Im, point, description)
+Im1_descriptor_points = zeros(6, N_points, n);    % (Im, point, description)
 for i = 1:6
     for j = 1:N_points
         if(valid_points_mat(i,j))
@@ -84,15 +85,15 @@ for i = 1:6
     end
 end
 %% descriptor comparison
-predictions_correct = ones(6,N_points);
-predictions_distance = zeros(6,N_points);
-for j = 1:N_points
+predictions_correct = ones(6,N_points);             % save in a matrix if it hited right
+predictions_distance = zeros(6,N_points);           % save in a matrix the distances
+for j = 1:N_points % for all points in the first image
     xor_dist = sum(xor(Im1_descriptor_points(1,j,:), Im1_descriptor_points( ...
-        logical(valid_points_mat(:,j)),:,:)), 3);
-    [m,m_ind] = min(xor_dist ,[],2 );
-    predictions_correct(logical(valid_points_mat(:,j)),j) = (m_ind == j);
-    idx1 = sub2ind(size(xor_dist), [1:size(xor_dist, 1)], m_ind');
-    predictions_distance(logical(valid_points_mat(:,j)),j) = xor_dist(idx1);
+        logical(valid_points_mat(:,j)),:,:)), 3);       % xor=> matrix of size (valid_points, 1, n) thend add third dimension
+    [m,m_ind] = min(xor_dist ,[],2 );                   % find the minimum
+    predictions_correct(logical(valid_points_mat(:,j)),j) = (m_ind == j); % did it hit?
+    idx1 = sub2ind(size(xor_dist), [1:size(xor_dist, 1)], m_ind');        % indices of the descriptor
+    predictions_distance(logical(valid_points_mat(:,j)),j) = xor_dist(idx1); % compute distance
 end
 
 %% results
