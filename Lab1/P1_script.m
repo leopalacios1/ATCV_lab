@@ -1,11 +1,11 @@
 clear; clc; 
 
-S = 10;                     % patch size
+S = 16;                     % patch size
 
 Ims = {};           % library for imaes
 for i = 1:6
     Im = imread(strcat("wall/img", int2str(i), ".ppm"));
-    Ims{i} = imgaussfilt(rgb2gray(Im), S/2);
+    Ims{i} = rgb2gray(Im);
 end
 
 A_mat = {};         % library of homographic matrices
@@ -14,7 +14,7 @@ for i = 2:6
     fid = fopen(FileName, 'r');
     C = textscan(fid, '%s');
     C = C{1};
-    A = zeros(3,3);
+    A = zeros(3,3); 
     for j = 1:9
         A(floor((j-1)/3)+1, mod(j-1,3)+1) = str2num(C{j});
     end
@@ -26,6 +26,10 @@ end
 N_points = 1000;            % Number of corners selected
 
 points1 = detectHarrisFeatures(Ims{1});
+
+for i = 1:6
+    Ims{i} = imgaussfilt(Ims{i}, sqrt(S));
+end
 
 valid_points1 = and(and(points1.Location(:,1) > S/2+1, points1.Location(:,2) > S/2+1),  ...
             and(points1.Location(:,1) < size(Ims{1},2)-S/2, points1.Location(:,2) < size(Ims{1},1)-S/2)); 
@@ -69,23 +73,31 @@ end
 
 %% start exercise
 n = 128;                        % number of descriptors pairs
-descriptor_points = randi(S, [4,n])-S/2; % each column [p1(1), p1(2), p2(1), p2(2)]'
-% from [-S/2, +S/2]
 
+X_descriptor_points = randi(S, [2,n])-S/2; % each column [p1(1), p1(2)]'
+Y_descriptor_points = randi(S, [2,n])-S/2; % each column [p2(1), p2(2)]'
+
+% from [-S/2, +S/2]
+figure; hold on;
+for i = 1:n
+    plot( [X_descriptor_points(1,i);Y_descriptor_points(1,i)], [X_descriptor_points(2,i);Y_descriptor_points(2,i)], '-k')
+end
 %%
 Im1_descriptor_points = zeros(6, N_points, n);    % (Im, point, description)
 for i = 1:6
     for j = 1:N_points
         if(valid_points_mat(i,j))
             c_point = round(squeeze(points_matrix(i,:,j)));
-            idx1 = sub2ind(size(Ims{i}), c_point(2)+descriptor_points(2,:), c_point(1)+descriptor_points(1,:));
-            idx2 = sub2ind(size(Ims{i}), c_point(2)+descriptor_points(4,:), c_point(1)+descriptor_points(3,:));
+            idx1 = sub2ind(size(Ims{i}), c_point(2)+X_descriptor_points(2,:), c_point(1)+X_descriptor_points(1,:));
+            idx2 = sub2ind(size(Ims{i}), c_point(2)+Y_descriptor_points(2,:), c_point(1)+Y_descriptor_points(1,:));
             Im1_descriptor_points(i,j,:) = Ims{i}(idx1) > Ims{i}(idx2);
+        else
+            Im1_descriptor_points(i,j,:) = -1;
         end
     end
 end
 %% descriptor comparison
-predictions_correct = ones(6,N_points);             % save in a matrix if it hited right
+predictions_correct = zeros(6,N_points);             % save in a matrix if it hited right
 predictions_distance = zeros(6,N_points);           % save in a matrix the distances
 for j = 1:N_points % for all points in the first image
     xor_dist = sum(xor(Im1_descriptor_points(1,j,:), Im1_descriptor_points( ...
@@ -98,19 +110,25 @@ end
 
 %% results
 
-which_image = 3;
+which_image = 2;
 
-y = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
-yy = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
+True_pos_dist = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
+False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 
 
 figure()
-hist(y, 20);
+hist(True_pos_dist , 20);
 title('correct')
 
 figure()
-hist(yy,20);
+hist(False_pos_dist , 20);
 title('non correct')
 
 correct_hits = sum( and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
 bad_hits = sum(  and(~logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
+
+TPR = hist(True_pos_dist , 33, 'Normalization', 'pdf');
+FPR = hist(False_pos_dist , 33, 'Normalization', 'pdf');
+figure()
+title('Roc curve')
+plot(cumsum(FPR), cumsum(TPR))
