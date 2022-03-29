@@ -117,10 +117,10 @@ False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_cor
 
 
 figure;
-h1 = histogram(True_pos_dist,40,'Normalization','pdf')
+h1 = histogram(True_pos_dist,33,'Normalization','pdf')
 hold on
-h2 = histogram(False_pos_dist,40,'Normalization','pdf')
-legend('True positive', 'False positive')
+h2 = histogram(False_pos_dist,33,'Normalization','pdf')
+legend([])
 hold off
 
 correct_hits = sum( and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
