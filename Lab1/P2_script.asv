@@ -3,6 +3,7 @@
 % No key Points detection, using whole patch...
 %% SET UP _____________________________________________________________________________
 clear; clc; 
+displaying   = 1;
 currentPath = pwd;
 f           = filesep;
 ImagesPath  = strcat(currentPath,f,"traffic models/Meta/",f);
@@ -31,16 +32,20 @@ Ims_G = cell(1,nImages);
 for i = 1:nImages
     Ims_G{i} = imgaussfilt(rgb2gray(Ims{i}),sigma);
 end
-
+%% HERE FOR TESTING AND AVERAGING ACROOS RANDOM PATTERNS FOR EVALUATION
+clc
+nTrials = 1000;
+displaying = 0;
+DISTminmax_norm_mean = zeros(nImages,2);
+for i =1:nTrials
 %% BRIEF PATTERN SELECTION/CREATION ____________________________________________________
 
 % Parameters
-nBits = 256;
+nBits = 1024; %128,256,512,1024
 im_center = 50;
 S = 100;        % Entire Image is our patch
 
-
-% (II) i.i.d. Gaussian(0, 1/25*S^2) (From paper: sigma = 1/5*S)
+%% (A) i.i.d. Gaussian(0, 1/25*S^2) (From paper: sigma = 1/5*S)
 POINTS = zeros(nBits,4); 
 nCoord = 4*nBits;   % For each bite in the descriptor, 2 points of 2 coordinates are used
 count = 1;
@@ -62,17 +67,31 @@ end
 
 
 
-%% (IV) coarse polar grid
-X = [];
-Y = [];
-for i=1:round(nBits/2)
-    theta = rand()*360;
-    r1    = rand()*100-50;
-    r2    = rand()*100-50;
-    X     = [X, 50+cosd(theta)*r1];
-end
-
-POINTS = [X,Y]; % NOTE: X and Y will be used as the pixel coordinates u,v of a given image. (X>Y)
+%% (B) Random polar pairs
+% nBits = 1024; %128,256,512,1024
+% Psize = 100;
+% POINTS = zeros(nBits,4); 
+% for i=1:nBits
+%     theta       = rand()*360;
+%     r1          = rand()*100-50;
+%     r2          = rand()*100-50;
+%     POINTS(i,1) = ceil(50+cosd(theta)*r1); % x1
+%     POINTS(i,2) = ceil(50+sind(theta)*r1); % y1
+%     POINTS(i,3) = ceil(50+cosd(theta)*r2); % x2
+%     POINTS(i,4) = ceil(50+sind(theta)*r2); % y2
+% end
+% if displaying
+%     figure; hold on;
+%     for i = 1:nBits
+%         plot( [POINTS(i,1);POINTS(i,2)], [POINTS(i,3);POINTS(i,4)], '-k')
+%     end
+% end
+% % Change from coordinates (u,v) to linear index. New Point MTX is then nBits by 2
+% POINTS_lin = zeros(nBits,2);
+% for pair = 1:nBits
+%     POINTS_lin(pair,1) = sub2ind([Psize Psize],POINTS(pair,1),POINTS(pair,2));
+%     POINTS_lin(pair,2) = sub2ind([Psize Psize],POINTS(pair,3),POINTS(pair,4));
+% end
 
 %% IMAGE DESCRIPTORS ____________________________________________________________
 
@@ -93,25 +112,44 @@ for i= 1:nImages
     DistanceVec      = sum(ComparisonMTX,2)';
     DistanceMTX(i,:) = DistanceVec;
 end
-% Displacy compactly (Taken from google)
-fprintf([repmat(sprintf('%% %dd',max(floor(log10(abs(DistanceMTX(:)))))+2+any(DistanceMTX(:)<0)),1,size(DistanceMTX,2)) '\n'],DistanceMTX');
-%% RESULTS MATRIX _______________________________________________________________
+DistanceMTX_norm     = round(DistanceMTX./nBits*100);
+if displaying
+    % Display compactly (Taken from google)
+    fprintf([repmat(sprintf('%% %dd',max(floor(log10(abs(DistanceMTX(:)))))+2+any(DistanceMTX(:)<0)),1,size(DistanceMTX,2)) '\n'],DistanceMTX');
+    disp('____________________________________________________________________________________________________________________________________________________________________________')
+    fprintf([repmat(sprintf('%% %dd',max(floor(log10(abs(DistanceMTX_norm(:)))))+2+any(DistanceMTX_norm(:)<0)),1,size(DistanceMTX_norm,2)) '\n'],DistanceMTX_norm');
+end
+%% RESULTS _______________________________________________________________
 
-clc
-for i = 1:5
+DISTminmax = zeros(nImages,2); % Rows: model, Columns: Min Dist, Max Dist
+
+for i = 1:nImages
     tempResult    = DistanceMTX(i,:);
     % Convert 0 into NaN, hard fix to avoid selecting same image
     tempResult(tempResult==0)=NaN;
     [closesDist, closestIm]    = min(tempResult);
     [furthestDist, furthestIm] = max(tempResult);
-    disp(['Image ', num2str(i-1), ':'])
+    DISTminmax(i,:) = [closesDist, furthestDist];
+    if displaying
+        disp(['Image ', num2str(i-1), ':'])
     
-    disp(['Closest classification is image ', num2str(closestIm-1), ...
-        ', with a hamming distance of ', num2str(closesDist)])
-    disp(['Furthest classification is image ', num2str(furthestIm-1), ...
-        ', with a hamming distance of ', num2str(furthestDist)])
-    disp(' ')
-
+        disp(['Closest classification is image ', num2str(closestIm-1), ...
+            ', with a hamming distance of ', num2str(closesDist)])
+        disp(['Furthest classification is image ', num2str(furthestIm-1), ...
+            ', with a hamming distance of ', num2str(furthestDist)])
+        disp(' ')
+    end
 end
-%% PLOT
-plot(DistanceMTX(1,:))
+DISTminmax_norm = round(DISTminmax./ nBits*100,2);
+
+
+DISTminmax_norm_mean = DISTminmax_norm_mean + DISTminmax_norm;
+
+%% END of TESTING
+end
+DISTminmax_norm_mean = DISTminmax_norm_mean./nTrials;
+nBits
+DISTminmax_norm_mean
+
+
+%

@@ -1,6 +1,6 @@
 clear; clc; 
 
-S = 16;                     % patch size
+S = 32;                     % patch size
 
 Ims = {};           % library for imaes
 for i = 1:6
