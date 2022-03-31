@@ -87,7 +87,7 @@ end
 for i = 1:6
     Im = imread(strcat("wall/img", int2str(i), ".ppm"));
     Ims{i} = rgb2gray(Im);
-    Ims{i} = imgaussfilt(Ims{i}, 1);
+    Ims{i} = imgaussfilt(Ims{i}, 2);
 end
 
 % Obtain the desciptors of each valid point in each image
@@ -118,41 +118,45 @@ end
 
 %% results
 
-which_image = 2;
+which_image = 3;
 
 True_pos_dist = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 
 
-% figure;
-% h1 = histogram(True_pos_dist,40,'Normalization','pdf')
-% hold on
-% h2 = histogram(False_pos_dist,40,'Normalization','pdf')
-% legend('True positive', 'False positive')
-% hold off
+figure;
+h1 = histogram(True_pos_dist,40,'Normalization','pdf')
+hold on
+h2 = histogram(False_pos_dist,40,'Normalization','pdf')
+legend('True positive', 'False positive')
+hold off
 
 correct_hits = sum( and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
 bad_hits = sum(  and(~logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
 
-TPR = hist(True_pos_dist , 33, 'Normalization', 'pdf');
-FPR = hist(False_pos_dist , 33, 'Normalization', 'pdf');
+TPR = hist(True_pos_dist , 40, 'Normalization', 'pdf');
+FPR = hist(False_pos_dist , 40, 'Normalization', 'pdf');
 
 hit_rate = correct_hits/(correct_hits+bad_hits)
 
-% figure()
-% title('Roc curve')
-% plot(cumsum(FPR), cumsum(TPR))
-% 
+figure()
+title('Roc curve')
+plot(cumsum(FPR), cumsum(TPR))
+
+
+
+
+
 
 %% new descriptor proposed
 
 theta = linspace(0,2*pi, 100);
+circle_matrix = zeros(33,33);
 
 r = S/2;
 circle_points = [r*cos(theta);r*sin(theta)];            % radius S/2 outer circle
 circle_points = unique( round(circle_points)' , 'rows' )';% round and eliminate the repeated points
 
-circle_matrix = zeros(33,33);
 circle_matrix( sub2ind([33,33] , circle_points(1,:)+S/2+1, circle_points(2,:)+S/2+1 ) ) = 1;
 n_left = n-round(n/3);
 X_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/3),1));
@@ -190,7 +194,7 @@ end
 for i = 1:6
     Im = imread(strcat("wall/img", int2str(i), ".ppm"));
     Ims{i} = rgb2gray(Im);
-    Ims{i} = imgaussfilt(Ims{i}, 1);
+    Ims{i} = imgaussfilt(Ims{i}, 2);
 end
 
 % Obtain the desciptors of each valid point in each image
@@ -221,7 +225,7 @@ end
 
 %% results
 
-which_image = 2;
+which_image = 6;
 
 True_pos_dist = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
@@ -242,10 +246,10 @@ FPR = hist(False_pos_dist , 33, 'Normalization', 'pdf');
 
 hit_rate = correct_hits/(correct_hits+bad_hits)
 
-% figure()
-% title('Roc curve')
-% plot(cumsum(FPR), cumsum(TPR))
-% 
+figure()
+title('Roc curve')
+plot(cumsum(FPR), cumsum(TPR))
+
 
 %% new descriptor
 
@@ -268,18 +272,21 @@ circle_points = [r*cos(theta);r*sin(theta)];            % radius S/2 outer circl
 circle_points = unique( round(circle_points)' , 'rows' )';% round and eliminate the repeated points
 circle_matrix( sub2ind([33,33] , X_descriptor_points_new(1,:)+S/2+1 , X_descriptor_points_new(1,:)+S/2+1) ) = 1;
 
-n_left = n_left-round(n/3);
-X_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/3)));% one third to the outer circle
-y_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/3)));
+n_left = n_left-round(n/2);
+X_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/2)));% one third to the outer circle
+y_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/2)));
 % inner circle
-r = S/2;
+r = S/6;
 circle_points = [r*cos(theta);r*sin(theta)];            % radius S/2 outer circle
 circle_points = unique( round(circle_points)' , 'rows' )';% round and eliminate the repeated points
 circle_matrix( sub2ind([33,33] , X_descriptor_points_new(1,:)+S/2+1 , X_descriptor_points_new(1,:)+S/2+1) ) = 1;
 
 n_left = n-round(n/3);
-X_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/3)));% one third to the outer circle
-y_descriptor_points_new = circle_points(:,randi(size(circle_points,2),round(n/3)));
+X_descriptor_points_new = circle_points(:,randi(size(circle_points,2),n_left));% one third to the outer circle
+y_descriptor_points_new = circle_points(:,randi(size(circle_points,2),n_left));
+
+figure
+
 
 
 

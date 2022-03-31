@@ -118,31 +118,31 @@ end
 
 %% results
 
-which_image = 2;
+which_image = 3;
 
 True_pos_dist = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 
 
-% figure;
-% h1 = histogram(True_pos_dist,40,'Normalization','pdf')
-% hold on
-% h2 = histogram(False_pos_dist,40,'Normalization','pdf')
-% legend('True positive', 'False positive')
-% hold off
+figure;
+h1 = histogram(True_pos_dist,40,'Normalization','pdf')
+hold on
+h2 = histogram(False_pos_dist,40,'Normalization','pdf')
+legend('True positive', 'False positive')
+hold off
 
 correct_hits = sum( and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
 bad_hits = sum(  and(~logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))  )
 
-TPR = hist(True_pos_dist , 33, 'Normalization', 'pdf');
-FPR = hist(False_pos_dist , 33, 'Normalization', 'pdf');
+TPR = hist(True_pos_dist , 40, 'Normalization', 'pdf');
+FPR = hist(False_pos_dist , 40, 'Normalization', 'pdf');
 
 hit_rate = correct_hits/(correct_hits+bad_hits)
 
-% figure()
-% title('Roc curve')
-% plot(cumsum(FPR), cumsum(TPR))
-% 
+figure()
+title('Roc curve')
+plot(cumsum(FPR), cumsum(TPR))
+
 
 
 
@@ -225,7 +225,7 @@ end
 
 %% results
 
-which_image = 2;
+which_image = 6;
 
 True_pos_dist = predictions_distance(which_image,and(logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
 False_pos_dist  = predictions_distance(which_image,and(~ logical(predictions_correct(which_image,:)), logical(valid_points_mat(which_image,:)))   ) ;
@@ -246,10 +246,10 @@ FPR = hist(False_pos_dist , 33, 'Normalization', 'pdf');
 
 hit_rate = correct_hits/(correct_hits+bad_hits)
 
-% figure()
-% title('Roc curve')
-% plot(cumsum(FPR), cumsum(TPR))
-% 
+figure()
+title('Roc curve')
+plot(cumsum(FPR), cumsum(TPR))
+
 
 %% new descriptor
 
