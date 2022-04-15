@@ -10,7 +10,7 @@ centers = X( randi(size(X,1), [k,1]) ,:);
 prev_centers = zeros(k, size(X,2));
 
 % allocate the distance matrix [n,k]
-dist_matrix = zeros( size(X,1), k)
+dist_matrix = zeros( size(X,1), k);
 
 curr_it = 1;
 
@@ -26,7 +26,7 @@ while(curr_it <= max_it && max(dist_funct(centers, prev_centers)) > tol )
     [m,indx] = min(dist_matrix, [], 2); % the index goes from [1,k]
 
     for i = 1:k         % update the centers
-        centers = mean( X( indx==i,:), 2 );   % choose the Euclidean mean function
+        centers(i,:) = mean( X( indx==i,:), 1 );   % choose the Euclidean mean function
     end
 
     curr_it = curr_it + 1;
