@@ -1,4 +1,4 @@
-function [indx, centers] = k_means(X, k, dist_funct)
+function [indx, centers] = k_means(X, k, dist_funct, mean_f)
 % we assume X is [n, dims] size
 % set tolerance and maximum number of iterations;
 tol = 1e-4; max_it = 20;
@@ -12,10 +12,10 @@ prev_centers = zeros(k, size(X,2));
 % allocate the distance matrix [n,k]
 dist_matrix = zeros( size(X,1), k);
 
-curr_it = 1;
+curr_it = 0;
 
 % start the loop
-while(curr_it <= max_it && max(dist_funct(centers, prev_centers)) > tol )
+while(curr_it < max_it && max(dist_funct(centers, prev_centers)) > tol )
     
     prev_centers = centers;
 
@@ -26,9 +26,9 @@ while(curr_it <= max_it && max(dist_funct(centers, prev_centers)) > tol )
     [m,indx] = min(dist_matrix, [], 2); % the index goes from [1,k]
 
     for i = 1:k         % update the centers
-        centers(i) = mean( X( indx==i,:), 1 );   % choose the Euclidean mean function
+        centers(i,:) = mean( X( indx==i,:), 1 );   % choose the Euclidean mean function
     end
 
-    curr_it = curr_it + 1
+    curr_it = curr_it + 1;
 end
 end

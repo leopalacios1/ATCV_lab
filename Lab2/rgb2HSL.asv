@@ -1,8 +1,0 @@
-function [HSL] = rgb2HSL(Im);
-% assuming that the image is [n, rgb];
-    HSL = zeros(size(Im));
-    % H = atan2( (B-G)/sqrt(2)  ,  (2R-B-G)/sqrt(6) )
-    HSL[:,1] = atan2( (Im(:,3) - Im(:,3))/sqrt(2), (2*Im(:,1) - Im(:,3) - Im(:,2))/sqrt(6)   )
-    M = max(Im, [], 2);
-    m = min(Im, [], 2);
-endIm(:,1)
