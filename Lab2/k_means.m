@@ -12,10 +12,10 @@ prev_centers = zeros(k, size(X,2));
 % allocate the distance matrix [n,k]
 dist_matrix = zeros( size(X,1), k);
 
-curr_it = 1;
+curr_it = 0;
 
 % start the loop
-while(curr_it <= max_it && max(dist_funct(centers, prev_centers)) > tol )
+while(curr_it < max_it && max(dist_funct(centers, prev_centers)) > tol )
     
     prev_centers = centers;
 

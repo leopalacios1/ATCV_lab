@@ -35,14 +35,15 @@ XX = rgb2HSL(X);
 k = 5;
 
 [indx, centers] = k_means(XX, k, @eucl_distance);
-centers = HSL2rgb(centers);
 
 Y = zeros(size(X));
 for i = 1:k
-    Y(indx == i,:) = repmat( centers(i,:) , [sum(indx == i),1] );
+    mean_color = mean(X( indx == i, :), 1);
+    Y(indx == i,:) = repmat( mean_color , [sum(indx == i),1] );
+
 end
 
-Y = uint8(  reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  );
+Y = uint8(reshape(Y,[size(Im,1),size(Im,2),size(Im,3)]));
 
 figure;
 subplot(1,2,1)
@@ -52,20 +53,5 @@ subplot(1,2,2)
 imshow(Y)
 title(strcat(" Clusterized k = ", num2str(k)))
 
-
-%%
-
-X = double(reshape(Im, [size(Im,1)*size(Im,2), size(Im,3)]));
-XX = rgb2HSL(X);
-Y = HSL2rgb(XX);
-Y = uint8(  reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  );
-
-figure;
-subplot(1,2,1)
-imshow(Im) 
-title("Original image")
-subplot(1,2,2)
-imshow(Y)
-title(strcat(" Clusterized k = ", num2str(k)))
 
 
