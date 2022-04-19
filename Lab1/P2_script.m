@@ -41,7 +41,7 @@ for i =1:nTrials
 %% BRIEF PATTERN SELECTION/CREATION ____________________________________________________
 
 % Parameters
-nBits = 1024; %128,256,512,1024
+nBits = 512; %128,256,512,1024
 im_center = 50;
 S = 100;        % Entire Image is our patch
 
@@ -68,30 +68,39 @@ end
 
 
 %% (B) Random polar pairs
-% nBits = 1024; %128,256,512,1024
-% Psize = 100;
-% POINTS = zeros(nBits,4); 
-% for i=1:nBits
-%     theta       = rand()*360;
-%     r1          = rand()*100-50;
-%     r2          = rand()*100-50;
-%     POINTS(i,1) = ceil(50+cosd(theta)*r1); % x1
-%     POINTS(i,2) = ceil(50+sind(theta)*r1); % y1
-%     POINTS(i,3) = ceil(50+cosd(theta)*r2); % x2
-%     POINTS(i,4) = ceil(50+sind(theta)*r2); % y2
-% end
-% if displaying
-%     figure; hold on;
-%     for i = 1:nBits
-%         plot( [POINTS(i,1);POINTS(i,2)], [POINTS(i,3);POINTS(i,4)], '-k')
-%     end
-% end
-% % Change from coordinates (u,v) to linear index. New Point MTX is then nBits by 2
-% POINTS_lin = zeros(nBits,2);
-% for pair = 1:nBits
-%     POINTS_lin(pair,1) = sub2ind([Psize Psize],POINTS(pair,1),POINTS(pair,2));
-%     POINTS_lin(pair,2) = sub2ind([Psize Psize],POINTS(pair,3),POINTS(pair,4));
-% end
+nBits = 256; %128,256,512,1024
+Psize = 100;
+POINTS = zeros(nBits,4); 
+for i=1:nBits
+    theta       = rand()*360;
+    r1          = rand()*100-50;
+    r2          = rand()*100-50;
+    POINTS(i,1) = ceil(50+cosd(theta)*r1); % x1
+    POINTS(i,2) = ceil(50+sind(theta)*r1); % y1
+    POINTS(i,3) = ceil(50+cosd(theta)*r2); % x2
+    POINTS(i,4) = ceil(50+sind(theta)*r2); % y2
+end
+
+% Change from coordinates (u,v) to linear index. New Point MTX is then nBits by 2
+POINTS_lin = zeros(nBits,2);
+for pair = 1:nBits
+    POINTS_lin(pair,1) = sub2ind([Psize Psize],POINTS(pair,1),POINTS(pair,2));
+    POINTS_lin(pair,2) = sub2ind([Psize Psize],POINTS(pair,3),POINTS(pair,4));
+end
+
+%
+close all;
+if displaying
+    figure; hold on;
+    for i = 1:nBits
+        plot( [POINTS(i,1);POINTS(i,2)], [POINTS(i,3);POINTS(i,4)], '-k')
+    end
+    title('Unorderd Random Sampling')
+   % title('Orderd Random Sampling')
+    xlabel('Pixel coordinate v')
+    ylabel('Pixel coordinate u')
+end
+
 
 %% IMAGE DESCRIPTORS ____________________________________________________________
 
