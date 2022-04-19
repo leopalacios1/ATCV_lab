@@ -26,7 +26,7 @@ histogram(Im(:,:,3)); title('Green values histogram')
 %% 1. Euclidean distance
 X = double(reshape(Im, [size(Im,1)*size(Im,2), size(Im,3)]));
 
-k    = 10;
+k    = 5;
 dist = @eucl_distance; %@mahal; 
 
 [indx, centers] = k_means(X, k, dist, @RGB_mean);
@@ -75,6 +75,16 @@ for i=1:nColors
 end
 Palette = uint8(Palette);
 figure; imshow(Palette); title('Color Segmentation Results')
+
+%% Morphology 
+
+% Select color from the color palette
+colorIdx = 5;
+Color = Colors(colorIdx,:);
+Y_bin = Y(:,:,1) == Color(1) & Y(:,:,2) == Color(2) & Y(:,:,3) == Color(3);
+imshow(Y_bin)
+
+
 %% HSL space
 
 X = double(reshape(Im, [size(Im,1)*size(Im,2), size(Im,3)]));
