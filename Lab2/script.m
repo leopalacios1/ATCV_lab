@@ -83,7 +83,33 @@ colorIdx = 5;
 Color = Colors(colorIdx,:);
 Y_bin = Y(:,:,1) == Color(1) & Y(:,:,2) == Color(2) & Y(:,:,3) == Color(3);
 imshow(Y_bin)
+%% alternative
 
+carcicoma_blue = [112, 56, 129];
+dist_vec = dist( carcicoma_blue, centers);
+[m, carcicoma_idx] = min(dist_vec)
+% use idx of the segmentation
+
+BW_image = zeros(h,w);
+BW_image(indx == carcicoma_idx) = 1;
+figure;
+imshow(BW_image)
+
+figure;
+se = strel('disk',3);
+BW_im2 = imopen(BW_image, se);
+se = strel('disk',10);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imfill(BW_im2);
+imshow(BW_im2)
+
+figure;
+Im_2 = reshape(Im, [h*w, 3]) ;
+bool_indices = reshape(BW_im2, [h*w,1]) > 0.5;
+Im_2( bool_indices , :  ) = repmat(carcicoma_blue, [sum(bool_indices),1]);
+Im_2 = reshape( Im_2, [h,w,3] );
+imshow(Im_2)
 
 %% HSL space
 
@@ -94,11 +120,11 @@ k    = 5;
 dist = @HSL_dist;
 
 [indx, centers] = k_means(XX, k, @HSL_dist, @HSL_mean);
-centers = HSL2rgb(centers);
+RGB_centers = HSL2rgb(centers);
 
 Y = zeros(size(X));
 for i = 1:k
-    Y(indx == i,:) = repmat( centers(i,:) , [sum(indx == i),1] );
+    Y(indx == i,:) = repmat( RGB_centers(i,:) , [sum(indx == i),1] );
 end
 
 Y = uint8(  reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  );
@@ -110,6 +136,23 @@ title("Original image")
 subplot(1,2,2)
 imshow(Y)
 title(strcat(" Clusterized k = ", num2str(k)))
+
+%% HSL color space
+
+h = size(Y,1);
+w = size(Y,2);
+v = h*w;
+ 
+% Color Clustering from original
+C = double([reshape(Y(:,:,1),[v 1]), reshape(Y(:,:,2),[v 1]), reshape(Y(:,:,3),[v 1])])./255;
+
+figure;
+scatter3( XX(:,2).*cos(XX(:,1))  ,XX(:,2).*sin(XX(:,1)) ,XX(:,3),36,C,'filled')
+
+xlim([-1,1])
+ylim([-1,1])
+zlim([0,1])
+%% Carcicoma morphology
 
 
 %% HSL example
