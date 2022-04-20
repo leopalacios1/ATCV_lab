@@ -30,5 +30,6 @@ while(curr_it < max_it && max(dist_funct(centers, prev_centers)) > tol )
     end
 
     curr_it = curr_it + 1;
+    
 end
 end
