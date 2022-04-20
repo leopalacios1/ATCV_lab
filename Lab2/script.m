@@ -126,31 +126,33 @@ imshow(Y_cb5)
 title(strcat(" k = 5, with city block distance."))
 %% Visualize Image
 close all;
-Y = Y_euc5; % Select best parameters
+%Y = Y_euc5; % Select best parameters
 
 h = size(Y,1);
 w = size(Y,2);
 v = h*w;
 
 % Color Clustering from original
-C = double([reshape(Y(:,:,1),[v 1]), reshape(Y(:,:,2),[v 1]), reshape(Y(:,:,3),[v 1])])./255;
+C = double([reshape(Y(:,:,1),[v 1]), reshape(Y(:,:,2),[v 1]), reshape(Y(:,:,3),[v 1])])./255; %REMOVE OR ADD ./255
 
 figure;
 imshow(Y)
-title('Image after Cluster')
+title('Image after Cluster','FontSize',18)
 
 figure;
 scatter3(reshape(Im(:,:,1),[v 1]),reshape(Im(:,:,2),[v 1]),reshape(Im(:,:,3),[v 1]),36,C,'filled');
-title('Original RGB values and their assigned cluster')
+title('Original RGB values and their assigned cluster','FontSize',18)
 
 % Colors obtained
 Y_reshaped = double(reshape(Y, [size(Y,1)*size(Y,2), size(Y,3)]));
 Colors = unique(Y_reshaped,'rows');
 nColors = k;
+%%
 % Sort Colors
 distToWhite = sum((repmat(255,size(Colors,1),size(Colors,2))-Colors).^2,2);
 [B,I]       = sort(distToWhite);
-Colors      = Colors(I,:);
+TEMP        = Colors;
+Colors      = Colors(I,:)
 % Creat column square array displaying colors
 sizeSq = 100;
 Palette = zeros(sizeSq*nColors,sizeSq*nColors,3);
@@ -160,10 +162,10 @@ for i=1:nColors
     Palette(  ((i-1)*sizeSq+1)  :  (i)*sizeSq,:,3) = Colors(i,3);
 end
 Palette = uint8(Palette);
-
+close all
 figure; 
 imshow(Palette);
-title('Color Palette Obtained')
+title('Color Palette Obtained','FontSize',18)
 
 %% Morphology 
 close all;
@@ -197,7 +199,7 @@ carcicoma_blue = [112, 56, 129];
 dist_vec = dist( carcicoma_blue, centers);
 [m, carcicoma_idx] = min(dist_vec);
 % use idx of the segmentation
-
+%%
 BW_image = zeros(h,w);
 BW_image(indx == carcicoma_idx) = 1;
 figure;
@@ -206,7 +208,7 @@ imshow(BW_image)
 figure;
 se = strel('disk',3);
 BW_im2 = imopen(BW_image, se);
-se = strel('disk',10);
+se = strel('disk',4);
 BW_im2 = imdilate(BW_im2, se);
 BW_im2 = imdilate(BW_im2, se);
 BW_im2 = imfill(BW_im2);
@@ -273,13 +275,13 @@ ylim([-1,1])
 zlim([0,1])
 
 
-%% Carcicoma morphology
+%% Carcicoma morphology HSL
 
 carcicoma_blue = [112, 56, 129];
 dist_vec = dist( rgb2HSL(carcicoma_blue) , centers);
 [m, carcicoma_idx] = min(dist_vec);
 % use idx of the segmentation
-
+%%
 BW_image = zeros(h,w);
 BW_image(indx == carcicoma_idx) = 1;
 figure;
@@ -344,6 +346,51 @@ subplot(1,2,2)
 imshow(Y)
 title(strcat(" Clusterized k = ", num2str(k)))
 
+%% DISPLAY
+
+clc, close all
+figure;
+subplot(1,2,1)
+imshow(Im) 
+title("Original image",'FontSize',18)
+subplot(1,2,2)
+imshow(Y)
+title(strcat(" Clusterized k = ", num2str(k)),'FontSize',18)
+
+% Color Clustering from original
+C = double([reshape(Y(:,:,1),[v 1]), reshape(Y(:,:,2),[v 1]), reshape(Y(:,:,3),[v 1])]);
+
+figure;
+scatter3(reshape(Im(:,:,1),[v 1]),reshape(Im(:,:,2),[v 1]),reshape(Im(:,:,3),[v 1]),36,C,'filled');
+title('Original RGB values and their assigned cluster','FontSize',18)
+
+%% Carcicoma morphology HSV
+clc, close all;
+carcicoma_blue = [112, 56, 129]./255;
+dist_vec = dist( rgb2hsv(carcicoma_blue) , centers);
+[m, carcicoma_idx] = min(dist_vec);
+% use idx of the segmentation
+
+BW_image = zeros(h,w);
+BW_image(indx == carcicoma_idx) = 1;
+figure;
+imshow(BW_image)
+
+figure;
+se = strel('disk',6);
+BW_im2 = imopen(BW_image, se);
+se = strel('disk',7);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imfill(BW_im2);
+imshow(BW_im2)
+
+figure;
+Im_2 = reshape(Im, [h*w, 3]) ;
+bool_indices = reshape(BW_im2, [h*w,1]) > 0.5;
+Im_2( bool_indices , :  ) = repmat(carcicoma_blue, [sum(bool_indices),1]);
+Im_2 = reshape( Im_2, [h,w,3] );
+imshow(Im_2)
 
 %% HSV & HSL analysis
 
@@ -487,3 +534,88 @@ subplot(1,2,2)
 imshow(Y)
 title(strcat(" Clusterized k = ", num2str(k)))
 
+%% LAB Analysis
+
+XX = rgb2lab(Im);
+X = double(reshape(XX, [size(Im,1)*size(Im,2), size(Im,3)]));
+
+% K =3
+k = 3;
+
+[indx, centers] = k_means(X, k, @lab_dist, @RGB_mean);
+centers = lab2rgb([centers]);
+
+Y = zeros(size(X));
+for i = 1:k
+    Y(indx == i,:) = repmat( centers(i,:) , [sum(indx == i),1] );
+end
+
+Y_lab3 =   reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  ;
+
+% K = 4
+k = 4;
+
+[indx, centers] = k_means(X, k, @lab_dist, @RGB_mean);
+centers = lab2rgb([centers]);
+
+Y = zeros(size(X));
+for i = 1:k
+    Y(indx == i,:) = repmat( centers(i,:) , [sum(indx == i),1] );
+end
+
+Y_lab4 =   reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  ;
+
+% K =5
+k = 5;
+
+[indx, centers] = k_means(X, k, @lab_dist, @RGB_mean);
+centers = lab2rgb([centers]);
+
+Y = zeros(size(X));
+for i = 1:k
+    Y(indx == i,:) = repmat( centers(i,:) , [sum(indx == i),1] );
+end
+
+Y_lab5 =   reshape(Y,  [size(Im,1),size(Im,2),size(Im,3)])  ;
+
+
+
+
+figure;
+subplot(1,3,1)
+imshow(Y_lab3)
+title(strcat(" k = 3, in CIE LAB color space."),'FontSize',18)
+subplot(1,3,2)
+imshow(Y_lab4)
+title(strcat(" k = 4, in CIE LAB color space."),'FontSize',18)
+subplot(1,3,3)
+imshow(Y_lab5)
+title(strcat(" k = 5, in CIE LAB color space."),'FontSize',18)
+
+
+%% Carcicoma morphology LAB
+clc, close all;
+carcicoma_blue = [112, 56, 129]./255;
+dist_vec = dist(carcicoma_blue , centers);
+[m, carcicoma_idx] = min(dist_vec);
+% use idx of the segmentation
+BW_image = zeros(h,w);
+BW_image(indx == carcicoma_idx) = 1;
+figure;
+imshow(BW_image)
+
+figure;
+se = strel('disk',5);
+BW_im2 = imopen(BW_image, se);
+se = strel('disk',7);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imdilate(BW_im2, se);
+BW_im2 = imfill(BW_im2);
+imshow(BW_im2)
+
+figure;
+Im_2 = reshape(Im, [h*w, 3]) ;
+bool_indices = reshape(BW_im2, [h*w,1]) > 0.5;
+Im_2( bool_indices , :  ) = repmat(carcicoma_blue, [sum(bool_indices),1]);
+Im_2 = reshape( Im_2, [h,w,3] );
+imshow(Im_2)
