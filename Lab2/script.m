@@ -176,7 +176,7 @@ figure(1);
 imshow(Y_bin)
 %% alternative
 
-<<<<<<< HEAD
+
 % NOT SURE HOW TO BEST IMPLEMENT THIS PART
 
 SE = strel('disk',2);
@@ -192,7 +192,7 @@ imshow(imclose(Y_bin,SE));
 %%
 figure();
 imshow(imnclose(imclose(Y_bin,SE),SE));
-=======
+
 carcicoma_blue = [112, 56, 129];
 dist_vec = dist( carcicoma_blue, centers);
 [m, carcicoma_idx] = min(dist_vec);
@@ -218,7 +218,7 @@ bool_indices = reshape(BW_im2, [h*w,1]) > 0.5;
 Im_2( bool_indices , :  ) = repmat(carcicoma_blue, [sum(bool_indices),1]);
 Im_2 = reshape( Im_2, [h,w,3] );
 imshow(Im_2)
->>>>>>> 8113b729f83071209e226de54be31e871b081f8d
+
 
 %% HSL space
 
