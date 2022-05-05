@@ -1,0 +1,5 @@
+For highness filter, remember to adjust the Fourier coefficients to cover the 0-255 pixel range and avoid losing information
+
+We only need to implement the lowpassfilter.
+
+4-1 Manually change values of the by changing values in the matrix to 0 or whatever

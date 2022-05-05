@@ -128,7 +128,7 @@ worldPointsBest = worldPointsAll(idxBEST);
 Xres = 1920;
 Yres = 1080;
 IntrinsicMatrix = [1060,0,Xres/2   ; 0,1060,Yres/2   ;  0,0,1]'; % NOTE: TRANSPOSED
-cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix)
+cameraParams = cameraParameters('IntrinsicMatrix',IntrinsicMatrix);
 [worldOrientation, worldLocation] = estimateWorldCameraPose(imagePointsAll, worldPointsAll, cameraParams)
 %[worldOrientation, worldLocation] = estimateWorldCameraPose(imagePointsBest, worldPointsBest, cameraParams)
 
